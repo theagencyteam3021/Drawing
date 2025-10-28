@@ -1,9 +1,8 @@
 from modules.URrobot import UniversalRobot
 import RobotUrsila
 import math
-import time
 
-DEBUG = True
+DEBUG = False
 
 # --- Configuration ---
 UR_IP = RobotUrsila.UR_IP   # Replace with your robot's IP
@@ -15,11 +14,9 @@ COMMAND_WAIT = 0.5             # Time to wait between commands (s)
 tcp = [-0.00368,-0.00381,0.209,1.774,2.5831,0.038]  # Tool center position offset
 plane = [-0.29,-0.14,-0.092,0.0,0,-4.651]  # Reference plane for movements
 home_joint_position = [-18.8,-69.6,110.6,224.7,-9.9,261.21] # A "home" or "zero" position
-for i in home_joint_position:
-  i = math.radians(i)
 
 PAPERPOS = (0,0)
-PAPERSIZE = (0.1,0.1,0.1)
+PAPERSIZE = (0.2159,0.2794)
 PAPER_DOWN_OFFSET = -0.003
 
 ur = UniversalRobot(UR_IP, UR_PORT)
@@ -61,4 +58,3 @@ if DEBUG:
   drawBox()
 
 print("end")
-
