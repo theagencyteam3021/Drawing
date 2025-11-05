@@ -3,13 +3,13 @@ from svgpathtools import svg2paths
 import math
 import time
 import xml.etree.ElementTree as ET
-import Drawonplane
 
 currentRobotPosX = 0
 currentRobotPosY = 0
 
 def drawLineWithRobot(corrds,imageSize,breakThreshold=0.1):
     global currentRobotPosX, currentRobotPosY
+    import Drawonplane
     point1 = corrds[0]
     point1x = point1.x
     point1y = point1.y
@@ -28,7 +28,7 @@ def drawLineWithRobot(corrds,imageSize,breakThreshold=0.1):
     currentRobotPosX = point2x
     currentRobotPosY = point2y
 
-def main(svg_file,display=False):
+def main(svg_file,display=False,control=True):
     tree = ET.parse(svg_file)
     root = tree.getroot()
 
@@ -67,9 +67,11 @@ def main(svg_file,display=False):
             if display:
                 canvas.create_line(coords, fill=color, width=1.5, smooth=True)
                 root.update()
-            drawLineWithRobot(coords,[width,height],breakThreshold=0.001)
+            if control:
+                drawLineWithRobot(coords,[width,height],breakThreshold=0.001)
             
-            time.sleep(0.1)
+            if display:
+                time.sleep(0.01)
 
     # Draw all paths
     for i, path in enumerate(paths):
@@ -78,5 +80,6 @@ def main(svg_file,display=False):
 
     root.mainloop()
 
-svg_file = './cat.svg'
-main(svg_file)
+#svg_file = './cat.svg'
+svg_file = './AIcat.svg'
+main(svg_file,display=True,control=False)
