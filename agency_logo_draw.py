@@ -1,66 +1,66 @@
+# Agency logo draw example program
+
 from modules.URrobot import UniversalRobot
 import RobotUrsila
 
-# --- Configuration ---
-UR_IP = RobotUrsila.UR_IP   # Replace with your robot's IP
-UR_PORT = RobotUrsila.UR_PORT          # URScript TCP port
-ACC = 1.2                # Acceleration (m/s^2)
-VEL = 0.25               # Velocity (m/s)
-COMMAND_WAIT = 0.5             # Time to wait between commands (s)
+UR_IP = RobotUrsila.UR_IP
+UR_PORT = RobotUrsila.UR_PORT
+ACC = 0.5#1.2
+VEL = 1#0.25
+COMMAND_WAIT = 0.5
 
-tcp = [-0.00368,-0.00381,0.209,1.774,2.5831,0.038]  # Tool center position offset
-plane = [-0.29,-0.14,-0.092,0.0,0,-4.651]  # Reference plane for movements
-home_joint_position = [-0.165, -1.05, 1.658, 4.066, -1.532, 4.747] # A "home" or "zero" position
-
-ur = UniversalRobot(UR_IP, UR_PORT)
-
-ur.connect()
-
-PAPERPOS = (0,0)
-PAPERSIZE = (0.1,0.1,0.1)
-PAPER_DOWN_OFFSET = 0
+tcp = [-0.00368, -0.00381, 0.209, 1.774, 2.5831, 0.038]
+plane = [-0.29, -0.14, -0.092, 0, 0, -4.651]
+home_joint_position = [-0.165, -1.05, 1.658, 4.066, -1.532, 4.747]
 
 ur = UniversalRobot(UR_IP, UR_PORT)
 
 ur.connect()
+ur.set_tcp(tcp)
+ur.set_plane(plane)
+ur.set_command_timeout(1)
 
-ur.set_tcp(tcp)  # Set tool center if needed
-ur.set_plane(plane)  # Set reference plane
+# PAPERPOS = (0,0)
+# PAPERSIZE = (0.1, 0.1, 0.1)
+PAPER_DOWN_OFFSET = 0.02
 
-def drawOn(x,y):
-  global ACC, VEL
-  worldPosX = x
-  worldPosY = y
-  #worldPosX = PAPERPOS[0] + PAPERSIZE[0] * x
-  #worldPosY = PAPERPOS[1] + PAPERSIZE[1] * y
-  ur.movel([worldPosX, worldPosY, PAPER_DOWN_OFFSET, 0, 0, 0],a=ACC,v=VEL)
+def drawOn(x, y):
+    worldPosX = x
+    worldPosY = y
+    ur.movel([worldPosX, worldPosY, PAPER_DOWN_OFFSET, 0, 0, 0], a = ACC, v = VEL)
 
-def drawAbove(x,y):
-  global ACC, VEL
-  worldPosX = x
-  worldPosY = y
-  #worldPosX = PAPERPOS[0] + PAPERSIZE[0] * x
-  #worldPosY = PAPERPOS[1] + PAPERSIZE[1] * y
-  ur.movel([worldPosX, worldPosY, 0.1, 0, 0, 0],a=ACC,v=VEL)
+def drawOnP(x, y, r):
+    worldPosX = x
+    worldPosY = y
+    ur.movep([worldPosX, worldPosY, PAPER_DOWN_OFFSET, 0, 0, 0], a = ACC, v = VEL, r = r)
+
+def drawAbove(x, y):
+    worldPosX = x
+    worldPosY = y
+    ur.movel([worldPosX, worldPosY, 0.1, 0, 0, 0], a = ACC, v = VEL)
 
 def home():
-  global ACC, VEL
-  ur.movej(home_joint_position)
+    ur.movej(home_joint_position)
 
 home()
-drawOn(0.130, 0.210)
-drawOn(0.226687, 0.1134)
-drawOn(0.130, 0.0167)
-drawOn(0.033313, 0.1134)
-home()
-drawOn(0.130, 0.180)
-drawOn(0.1069, 0.140)
-drawOn(0.1531, 0.140)
-drawOn(0.130, 0.180)
-home()
-drawOn(0.096, 0.120)
-drawOn(0.164, 0.120)
-drawOn(0.1877, 0.080)
-drawOn(0.0723, 0.080)
-drawOn(0.096, 0.120)
-home()
+# Circle
+drawOnP(0.130, 0.210, 0.069) # Top of circle
+drawOnP(0.226687, 0.1134, 0.069) # Right of circle
+drawOnP(0.130, 0.0167, 0.069) # Bottom of circle
+drawOnP(0.033313, 0.1134, 0.069) # Left of circle
+drawOnP(0.130, 0.210, 0.069) # Top of circle
+
+# home()
+# # Triangle
+# drawOn(0.130, 0.180) # Top of triangle
+# drawOn(0.1069, 0.140) # Lower left of triangle
+# drawOn(0.1531, 0.140) # Lower right of triangle
+# drawOn(0.130, 0.180) # Top of triangle
+# home()
+# # Trapezoid
+# drawOn(0.096, 0.120) # Upper left of trapezoid
+# drawOn(0.164, 0.120) # Upper right of trapezoid
+# drawOn(0.1877, 0.080) # Lower right of trapezoid
+# drawOn(0.0723, 0.080) # Lower left of trapezoid
+# drawOn(0.096, 0.120) # Upper left of trapezoid
+# home()
