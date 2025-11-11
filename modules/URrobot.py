@@ -155,6 +155,32 @@ class UniversalRobot:
             command = f"movep(p{list(pose)}, a={a}, v={v}, r={r})"
         self.send_command(command)
 
+
+    def movec(self, via_pose: PoseOrJoints, to_pose: PoseOrJoints, a: float = 1.2, v: float = 0.25, r: float = 0):
+        """
+        Circular move through an intermediate via pose to a target pose (movec).
+
+        URScript movec expects two poses: a via point (on the circle) and a target
+        point. If `set_plane()` has been used, the poses will be transformed
+        relative to that base pose similar to `movel`/`movep`.
+
+        Args:
+            via_pose (list/tuple): Intermediate pose on the circular arc p[x,y,z,rx,ry,rz].
+            to_pose (list/tuple): Target pose p[x,y,z,rx,ry,rz].
+            a (float): Tool acceleration [m/s^2].
+            v (float): Tool speed [m/s].
+            r (float): Blend radius [m].
+        """
+        if self.plane:
+            via_trans = f"pose_trans(p{list(self.plane)}, p{list(via_pose)})"
+            to_trans = f"pose_trans(p{list(self.plane)}, p{list(to_pose)})"
+            command = f"movec({via_trans}, {to_trans}, a={a}, v={v}, r={r})"
+        else:
+            command = f"movec(p{list(via_pose)}, p{list(to_pose)}, a={a}, v={v}, r={r})"
+        self.send_command(command)
+
+
+
     def speedj(self, qd: PoseOrJoints, a: float = 0.5, t: float = 0.1):
         """
         Accelerate to and maintain a joint speed.

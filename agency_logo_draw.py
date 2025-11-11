@@ -7,7 +7,7 @@ UR_IP = RobotUrsila.UR_IP
 UR_PORT = RobotUrsila.UR_PORT
 ACC = 0.5#1.2
 VEL = 1#0.25
-COMMAND_WAIT = 0.5
+COMMAND_WAIT = 1
 
 tcp = [-0.00368, -0.00381, 0.209, 1.774, 2.5831, 0.038]
 plane = [-0.29, -0.14, -0.092, 0, 0, -4.651]
@@ -22,17 +22,20 @@ ur.set_command_timeout(1)
 
 # PAPERPOS = (0,0)
 # PAPERSIZE = (0.1, 0.1, 0.1)
-PAPER_DOWN_OFFSET = 0.1
+PAPER_DOWN_OFFSET = 0.01
 
 def drawOn(x, y):
     worldPosX = x
-    worldPosY = y
+    worldPosY = yw
     ur.movel([worldPosX, worldPosY, PAPER_DOWN_OFFSET, 0, 0, 0], a = ACC, v = VEL)
 
 def drawOnP(x, y, r):
     worldPosX = x
     worldPosY = y
     ur.movep([worldPosX, worldPosY, PAPER_DOWN_OFFSET, 0, 0, 0], a = ACC, v = VEL, r = r)
+
+def drawOnC(x1, y1,x2,y2 r):
+    ur.movec([x1, y1, PAPER_DOWN_OFFSET, 0, 0, 0],[x2, y2, PAPER_DOWN_OFFSET, 0, 0, 0], a = ACC, v = VEL, r = r)
 
 def drawAbove(x, y):
     worldPosX = x
@@ -44,15 +47,25 @@ def home():
 
 home()
 # Circle
-drawOnP(0.130, 0.210, 0.097) # Top of circle
-drawOnP(0.226687, 0.210, 0.097) # Top right of circle
-drawOnP(0.226687, 0.1134, 0.097) # Right of circle
-drawOnP(0.226687, 0.0167, 0.097) # Bottom right of circle
-drawOnP(0.130, 0.0167, 0.097) # Bottom of circle
-drawOnP(0.033313, 0.0167, 0.097) # Bottom left of circle
-drawOnP(0.033313, 0.1134, 0.097) # Left of circle
-drawOnP(0.033313, 0.210, 0.097) # Top left of circle
-drawOnP(0.130, 0.210, 0.097) # Top of circle
+drawOnP(0.130, 0.210, 0.01) # Top of circle
+drawOnP(0.226687, 0.210, 0.01) # Top right of circle
+drawOnP(0.226687, 0.1134, 0.01) # Right of circle
+drawOnP(0.226687, 0.0167, 0.01) # Bottom right of circle
+drawOnP(0.130, 0.0167, 0.01) # Bottom of circle
+drawOnP(0.033313, 0.0167, 0.01) # Bottom left of circle
+drawOnP(0.033313, 0.1134, 0.197) # Left of circle
+drawOnP(0.033313, 0.210, 0.197) # Top left of circle
+drawOnP(0.130, 0.210, 0.197) # Top of circle
+
+# drawOnP(0.130, 0.210, 0.097) # Top of circle
+# drawOnP(0.226687, 0.210, 0.097) # Top right of circle
+# drawOnP(0.226687, 0.1134, 0.097) # Right of circle
+# drawOnP(0.226687, 0.0167, 0.097) # Bottom right of circle
+# drawOnP(0.130, 0.0167, 0.097) # Bottom of circle
+# drawOnP(0.033313, 0.0167, 0.097) # Bottom left of circle
+# drawOnP(0.033313, 0.1134, 0.097) # Left of circle
+# drawOnP(0.033313, 0.210, 0.097) # Top left of circle
+# drawOnP(0.130, 0.210, 0.097) # Top of circle
 
 # home()
 # # Triangle
@@ -67,4 +80,4 @@ drawOnP(0.130, 0.210, 0.097) # Top of circle
 # drawOn(0.1877, 0.080) # Lower right of trapezoid
 # drawOn(0.0723, 0.080) # Lower left of trapezoid
 # drawOn(0.096, 0.120) # Upper left of trapezoid
-# home()
+home()
