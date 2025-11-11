@@ -22,7 +22,7 @@ ur.set_command_timeout(1)
 
 # PAPERPOS = (0,0)
 # PAPERSIZE = (0.1, 0.1, 0.1)
-PAPER_DOWN_OFFSET = 0.02
+PAPER_DOWN_OFFSET = 0.1
 
 def drawOn(x, y):
     worldPosX = x
@@ -44,11 +44,15 @@ def home():
 
 home()
 # Circle
-drawOnP(0.130, 0.210, 0.069) # Top of circle
-drawOnP(0.226687, 0.1134, 0.069) # Right of circle
-drawOnP(0.130, 0.0167, 0.069) # Bottom of circle
-drawOnP(0.033313, 0.1134, 0.069) # Left of circle
-drawOnP(0.130, 0.210, 0.069) # Top of circle
+drawOnP(0.130, 0.210, 0.097) # Top of circle
+drawOnP(0.226687, 0.210, 0.097) # Top right of circle
+drawOnP(0.226687, 0.1134, 0.097) # Right of circle
+drawOnP(0.226687, 0.0167, 0.097) # Bottom right of circle
+drawOnP(0.130, 0.0167, 0.097) # Bottom of circle
+drawOnP(0.033313, 0.0167, 0.097) # Bottom left of circle
+drawOnP(0.033313, 0.1134, 0.097) # Left of circle
+drawOnP(0.033313, 0.210, 0.097) # Top left of circle
+drawOnP(0.130, 0.210, 0.097) # Top of circle
 
 # home()
 # # Triangle
