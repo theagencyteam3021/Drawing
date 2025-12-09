@@ -7,8 +7,8 @@ DEBUG = False
 # --- Configuration ---
 UR_IP = RobotUrsila.UR_IP   # Replace with your robot's IP
 UR_PORT = RobotUrsila.UR_PORT          # URScript TCP port
-ACC = 1.2                # Acceleration (m/s^2)
-VEL = 0.1               # Velocity (m/s)
+ACC = 0.6                # Acceleration (m/s^2)
+VEL = 0.5               # Velocity (m/s)
 COMMAND_WAIT = 0.5             # Time to wait between commands (s)
 
 tcp = [0.00381, -0.00531, 0.16898, -1.3403, -2.8233, 0.0033]#[-0.00368,-0.00381,0.209,1.774,2.5831,0.038]  # Tool center position offset

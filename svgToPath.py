@@ -11,14 +11,14 @@ def drawLineWithRobot(corrds,imageSize,breakThreshold=0.1):
     global currentRobotPosX, currentRobotPosY
     import Drawonplane
     point1 = corrds[0]
-    point1x = point1.x
-    point1y = point1.y
+    point1x = point1[0]
+    point1y = point1[1]
 
     point2 = corrds[1]
-    point2x = point2.x
-    point2y = point2.y
+    point2x = point2[0]
+    point2y = point2[1]
 
-    if (abs(currentRobotPosX-point1.x)>breakThreshold) or (abs(currentRobotPosY-point1.y)>breakThreshold):
+    if (abs(currentRobotPosX-point1x)>breakThreshold) or (abs(currentRobotPosY-point1y)>breakThreshold):
         # line break detected: go home first
         Drawonplane.home()
     
@@ -54,7 +54,7 @@ def main(svg_file,display=False,control=True):
         ox, oy = offset
         for segment in path:
             # Sample points along the path segment
-            num_points = 20  # increase for smoother curves
+            num_points = 1  # increase for smoother curves
             points = [
                 segment.point(t / num_points)
                 for t in range(num_points + 1)
@@ -63,23 +63,29 @@ def main(svg_file,display=False,control=True):
             for pt in points:
                 x = pt.real * scale + ox
                 y = pt.imag * scale + oy
-                coords.extend((x, y))
+                coords.append((x, y))
+                #print((x, y))
             if display:
                 canvas.create_line(coords, fill=color, width=1.5, smooth=True)
                 root.update()
             if control:
-                drawLineWithRobot(coords,[width,height],breakThreshold=0.001)
+                #print(coords)
+                drawLineWithRobot(coords,[float(width),float(height)],breakThreshold=1)
             
-            if display:
-                time.sleep(0.01)
-
+            #if display:
+            #    time.sleep(0)
+        
     # Draw all paths
     for i, path in enumerate(paths):
         color = attributes[i].get('stroke', 'black')
-        draw_svg_path(canvas, path, scale=1.0, offset=(50, 50), color=color)
+        draw_svg_path(canvas, path, scale=0.8, offset=(50, 50), color=color)
 
+    if control:
+        import Drawonplane
+        print("flush movements")
+        Drawonplane.flushMovements()
     root.mainloop()
 
 #svg_file = './cat.svg'
-svg_file = './AIcat.svg'
-main(svg_file,display=True,control=False)
+svg_file = './SVG_Test_Images/AIcat.svg'
+main(svg_file,display=True,control=True)
