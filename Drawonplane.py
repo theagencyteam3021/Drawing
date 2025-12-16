@@ -17,8 +17,8 @@ home_joint_position = [-0.165, -1.05, 1.658, 4.066, -1.532, 4.747]#[-18.8,-69.6,
 
 PAPERPOS = (0,0)
 PAPERSIZE = (0.2794,0.2159) #(0.2159,0.2794)
-PAPER_DOWN_OFFSET = 0.012
-PAPER_UP_OFFSET = 0.03
+PAPER_DOWN_OFFSET = 0.0116
+PAPER_UP_OFFSET = 0.03 #0.015
 
 ur = UniversalRobot(UR_IP, UR_PORT)
 
@@ -52,13 +52,13 @@ def flushMovements():
 def drawBox():
   drawOn(0.1,0.1)
   print("at start")
-  drawOn(0.5,0.1)
-  drawOn(0.5,0.5)
-  drawOn(0.1,0.5)
+  drawOn(0.8,0.1)
+  drawOn(0.8,0.8)
+  drawOn(0.1,0.8)
   drawOn(0.1,0.1)
   flushMovements()
 
-if DEBUG:
+if __name__ == "__main__":
   home()
   #time.sleep(2)
   print("moving")

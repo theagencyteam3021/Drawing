@@ -7,7 +7,7 @@ import xml.etree.ElementTree as ET
 currentRobotPosX = 0
 currentRobotPosY = 0
 
-def drawLineWithRobot(corrds,imageSize,breakThreshold=0.1):
+def drawLineWithRobot(corrds,imageSize,breakThreshold=0.1,testing=False):
     global currentRobotPosX, currentRobotPosY
     import Drawonplane
     point1 = corrds[0]
@@ -20,15 +20,21 @@ def drawLineWithRobot(corrds,imageSize,breakThreshold=0.1):
 
     if (abs(currentRobotPosX-point1x)>breakThreshold) or (abs(currentRobotPosY-point1y)>breakThreshold):
         # line break detected: go home first
-        Drawonplane.home()
+        #Drawonplane.home()
+        Drawonplane.drawAbove(currentRobotPosX/imageSize[0],currentRobotPosY/imageSize[1])
+        Drawonplane.drawAbove(point1x/imageSize[0],point1y/imageSize[1])
     
-    Drawonplane.drawOn(point1x/imageSize[0],point1y/imageSize[1])
-    Drawonplane.drawOn(point2x/imageSize[0],point2y/imageSize[1])
+    if not testing:
+        Drawonplane.drawOn(point1x/imageSize[0],point1y/imageSize[1])
+        Drawonplane.drawOn(point2x/imageSize[0],point2y/imageSize[1])
+    else:
+        Drawonplane.drawAbove(point1x/imageSize[0],point1y/imageSize[1])
+        Drawonplane.drawAbove(point2x/imageSize[0],point2y/imageSize[1])
 
     currentRobotPosX = point2x
     currentRobotPosY = point2y
 
-def main(svg_file,display=False,control=True):
+def main(svg_file,display=False,control=True,scale=0.5,testing=False):
     tree = ET.parse(svg_file)
     root = tree.getroot()
 
@@ -41,6 +47,8 @@ def main(svg_file,display=False,control=True):
     # Load paths from SVG file
     paths, attributes = svg2paths(svg_file)
 
+    canvas = None
+
     if display:
         # Create Tkinter window and canvas
         root = tk.Tk()
@@ -50,7 +58,7 @@ def main(svg_file,display=False,control=True):
         canvas.pack()
 
     # Function to convert SVG path data to line segments
-    def draw_svg_path(canvas, path, scale=1.0, offset=(0, 0), color="black"):
+    def draw_svg_path(path, scale=1.0, offset=(0, 0), color="black", canvas = None):
         ox, oy = offset
         for segment in path:
             # Sample points along the path segment
@@ -70,22 +78,28 @@ def main(svg_file,display=False,control=True):
                 root.update()
             if control:
                 #print(coords)
-                drawLineWithRobot(coords,[float(width),float(height)],breakThreshold=1)
+                drawLineWithRobot(coords,[float(width),float(height)],breakThreshold=1,testing=testing)
             
             #if display:
             #    time.sleep(0)
         
     # Draw all paths
     for i, path in enumerate(paths):
-        color = attributes[i].get('stroke', 'black')
-        draw_svg_path(canvas, path, scale=0.8, offset=(50, 50), color=color)
+        # draw every second point
+        if i % 2 == 0:
+            color = attributes[i].get('stroke', 'black')
+            draw_svg_path(path, scale=scale, color=color, canvas = canvas) # offset=(50, 50)
 
     if control:
         import Drawonplane
+        Drawonplane.home()
         print("flush movements")
         Drawonplane.flushMovements()
-    root.mainloop()
 
-#svg_file = './cat.svg'
-svg_file = './SVG_Test_Images/AIcat.svg'
-main(svg_file,display=True,control=True)
+    if display:
+        root.mainloop()
+
+if __name__ == "__main__":
+    #svg_file = './cat.svg'
+    svg_file = './SVG_Test_Images/AIcat.svg'
+    main(svg_file,display=True,control=True)
