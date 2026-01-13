@@ -1,0 +1,48 @@
+import svgToPath
+import bitmapToSvg
+import cv2
+from tkinter.filedialog import askopenfilename
+
+print("starting")
+
+USE_CAMERA = False
+
+if not USE_CAMERA:
+    input_file_path = askopenfilename(title="Select PNG", initialdir="~/Downloads", filetypes=[("PNG files","*.png")])
+    if not input_file_path: exit("No file selected!")
+else:
+    input_file_path = __file__+"/../start.png"
+
+output_file_path = __file__+"/../output"
+if not output_file_path.endswith(".svg"): output_file_path += ".svg"
+
+if USE_CAMERA:
+    # take picture and save to file_path
+    cap = cv2.VideoCapture(0)   # 0 = default webcam
+    if not cap.isOpened():
+        exit("Could not access webcam!")
+
+    ret, frame = cap.read()
+    cap.release()
+
+    if not ret:
+        exit("Failed to capture image!")
+
+    # choose how much to shrink the image
+    scale = 0.3   # 30% of original resolution
+
+    # resize to fewer pixels
+    frame = cv2.resize(frame, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
+
+    cv2.imwrite(input_file_path, frame)
+    print(f"Saved captured image to: {input_file_path}")
+# end take picture
+
+# do editing to image (charicator)
+print("editing image")
+
+# find edges
+bitmapToSvg.main(input_file_path,output_file_path)
+
+# draw Svg
+svgToPath.main(output_file_path,display=False,control=True,testing=False,scale=0.7)
