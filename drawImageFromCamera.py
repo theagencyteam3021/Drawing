@@ -45,4 +45,4 @@ print("editing image")
 bitmapToSvg.main(input_file_path,output_file_path)
 
 # draw Svg
-svgToPath.main(output_file_path,display=False,control=True,testing=True,scale=0.7)
+svgToPath.main(output_file_path,display=False,control=True,testing=False,scale=0.7)

@@ -7,9 +7,9 @@ import xml.etree.ElementTree as ET
 currentRobotPosX = 0
 currentRobotPosY = 0
 
-def drawLineWithRobot(corrds,imageSize,breakThreshold=0.1,testing=False):
+def drawLineWithRobot(corrds,imageSize,breakThreshold=0.05,testing=False,jitterThreshold=0.05):
     global currentRobotPosX, currentRobotPosY
-    import Drawonplane
+    
     point1 = corrds[0]
     point1x = point1[0]
     point1y = point1[1]
@@ -18,21 +18,30 @@ def drawLineWithRobot(corrds,imageSize,breakThreshold=0.1,testing=False):
     point2x = point2[0]
     point2y = point2[1]
 
-    if (abs(currentRobotPosX-point1x)>breakThreshold) or (abs(currentRobotPosY-point1y)>breakThreshold):
+    #print(abs(currentRobotPosX-point1x)/imageSize[0])
+
+    import Drawonplane
+
+    #print(f"x: {abs(currentRobotPosX-point1x)}")
+    #print(f"y: {abs(currentRobotPosX-point1x)}")
+
+    if (abs(currentRobotPosX-point1x)/imageSize[0]>breakThreshold) or (abs(currentRobotPosY-point1y)/imageSize[1]>breakThreshold):
         # line break detected: go home first
         #Drawonplane.home()
         Drawonplane.drawAbove(currentRobotPosX/imageSize[0],currentRobotPosY/imageSize[1])
         Drawonplane.drawAbove(point1x/imageSize[0],point1y/imageSize[1])
     
-    if not testing:
-        Drawonplane.drawOn(point1x/imageSize[0],point1y/imageSize[1])
-        Drawonplane.drawOn(point2x/imageSize[0],point2y/imageSize[1])
-    else:
-        Drawonplane.drawAbove(point1x/imageSize[0],point1y/imageSize[1])
-        Drawonplane.drawAbove(point2x/imageSize[0],point2y/imageSize[1])
+    if (abs(currentRobotPosX-point2x)/imageSize[0]>jitterThreshold) or (abs(currentRobotPosY-point2y)/imageSize[1]>jitterThreshold):
+        if not testing:
+            print("draw on")
+            Drawonplane.drawOn(point1x/imageSize[0],point1y/imageSize[1])
+            Drawonplane.drawOn(point2x/imageSize[0],point2y/imageSize[1])
+        else:
+            Drawonplane.drawAbove(point1x/imageSize[0],point1y/imageSize[1])
+            Drawonplane.drawAbove(point2x/imageSize[0],point2y/imageSize[1])
 
-    currentRobotPosX = point2x
-    currentRobotPosY = point2y
+        currentRobotPosX = point2x
+        currentRobotPosY = point2y
 
 def main(svg_file,display=False,control=True,scale=0.5,testing=False):
     tree = ET.parse(svg_file)
@@ -78,7 +87,7 @@ def main(svg_file,display=False,control=True,scale=0.5,testing=False):
                 root.update()
             if control:
                 #print(coords)
-                drawLineWithRobot(coords,[float(width),float(height)],breakThreshold=1,testing=testing)
+                drawLineWithRobot(coords,[float(width),float(height)],testing=testing)
             
             #if display:
             #    time.sleep(0)
