@@ -47,8 +47,8 @@ def main(svg_file,display=False,control=True,scale=0.5,testing=False):
     tree = ET.parse(svg_file)
     root = tree.getroot()
 
-    width = root.get('width')
-    height = root.get('height')
+    width = int(root.get('width'))
+    height = int(root.get('height'))
     viewBox = root.get('viewBox')
 
     print(f"width={width}, height={height}, viewBox={viewBox}")
@@ -67,7 +67,7 @@ def main(svg_file,display=False,control=True,scale=0.5,testing=False):
         canvas.pack()
 
     # Function to convert SVG path data to line segments
-    def draw_svg_path(path, scale=1.0, offset=(0, 0), color="black", canvas = None):
+    def draw_svg_path(path, size=(200,200), scale=1.0, offset=(0, 0), color="black", canvas = None):
         ox, oy = offset
         for segment in path:
             # Sample points along the path segment
@@ -78,8 +78,23 @@ def main(svg_file,display=False,control=True,scale=0.5,testing=False):
             ]
             coords = []
             for pt in points:
-                x = pt.real * scale + ox
-                y = pt.imag * scale + oy
+                pointX = pt.real
+                pointY = pt.imag
+
+                # center = size/2
+                # scaled_point = ((point-center)*scale) + center
+
+                centerX = size[0]/2
+                centerY = size[1]/2
+
+                scaledX = ((pointX-centerX)*scale) + centerX
+                scaledY = ((pointY-centerY)*scale) + centerY
+
+                x = scaledX
+                y = scaledY
+
+                #x = pt.real * scale + ox
+                #y = pt.imag * scale + oy
                 coords.append((x, y))
                 #print((x, y))
             if display:
@@ -97,7 +112,7 @@ def main(svg_file,display=False,control=True,scale=0.5,testing=False):
         # draw every second point
         if i % 2 == 0:
             color = attributes[i].get('stroke', 'black')
-            draw_svg_path(path, scale=scale, color=color, canvas = canvas) # offset=(50, 50)
+            draw_svg_path(path, size=(width,height), scale=scale, color=color, canvas = canvas) # offset=(50, 50)
 
     if control:
         import Drawonplane
