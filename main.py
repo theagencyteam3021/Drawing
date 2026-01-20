@@ -5,9 +5,6 @@
 # Takes user input and communicates with the robot to draw on paper #
 #####################################################################
 
-# TODO: Add proper support for arc instructions and fix end of last arc in a character being skipped
-# TODO: Test to make sure padding works properly when robot is aligned correctly
-
 from modules.URrobot import UniversalRobot
 from modules.text_vectorize import get_str_instructions
 import tkinter as tk
