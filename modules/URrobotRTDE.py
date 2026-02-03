@@ -174,10 +174,10 @@ class UniversalRobot:
             t (float): Time [s]. If t > 0, 'a' and 'v' are ignored. Not directly supported by rtde moveJ, but async moveJ with wait can be used.
             r (float): Blend radius [m].
         """
-        self.rtde_c.moveJ(q, v, a, r > 0)
+        self.rtde_c.moveJ(q, v, a, r)
 
 
-    def movel(self, pose: PoseOrJoints, a: float = 1.2, v: float = 0.25, t: float = 0, r: float = 0):
+    def movel(self, pose: Union[PoseOrJoints, List[PoseOrJoints]], a: float = 1.2, v: float = 0.25, t: float = 0, r: float = 0):
         """
         Move to a pose (linear in tool-space).
 
@@ -185,17 +185,32 @@ class UniversalRobot:
         the move is relative to that pose. Otherwise, it is an absolute move.
 
         Args:
-            pose (list/tuple): Target pose p[x, y, z, rx, ry, rz].
+            pose (list/tuple or list of list/tuple): Target pose(s) p[x, y, z, rx, ry, rz].
+                Can be a single pose or a list of poses to move through sequentially.
             a (float): Tool acceleration [m/s^2].
             v (float): Tool speed [m/s].
             t (float): Time [s]. If t > 0, 'a' and 'v' are ignored. Not supported by rtde moveL.
             r (float): Blend radius [m].
         """
-        target_pose = pose
-        if self.plane:
-            target_pose = pose_trans(self.plane, pose)
-
-        self.rtde_c.moveL(target_pose, v, a, r > 0)
+        # Check if pose is a list of poses (list of lists/tuples) or a single pose
+        is_list_of_poses = (isinstance(pose, list) and len(pose) > 0 and 
+                           isinstance(pose[0], (list, tuple)))
+        
+        if is_list_of_poses:
+            # Handle list of poses - transform all then send as list
+            # Note: moveL(path) only accepts the path and asynchronous flag
+            transformed_poses = []
+            for target_pose in pose:
+                if self.plane:
+                    target_pose = pose_trans(self.plane, target_pose)
+                transformed_poses.append(target_pose + [v, a, r])
+            self.rtde_c.moveL(transformed_poses)
+        else:
+            # Handle single pose
+            target_pose = pose
+            if self.plane:
+                target_pose = pose_trans(self.plane, pose)
+            self.rtde_c.moveL(target_pose, v, a)
 
     def movep(self, pose: PoseOrJoints, a: float = 1.2, v: float = 0.25, r: float = 0):
         """
