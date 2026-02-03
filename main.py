@@ -6,7 +6,7 @@
 #####################################################################
 
 from config import *
-from modules.URrobot import UniversalRobot
+from modules.URrobotRTDE import UniversalRobot
 from modules.text_vectorize import get_str_instructions
 from modules.image_vectorize import take_picture, get_image_instructions
 from modules.transformations import fit_elements
@@ -35,7 +35,9 @@ if __name__ == "__main__":
         text = text_input_box.get()
         instructions = get_str_instructions(text, FONT_PATH)
         fit_elements(instructions)
-        execute_move_list(ursula, instructions)
+        
+        ursula.movej(URSULA_HOME, URSULA_ACCEL, URSULA_VEL)
+        execute_move_list(ursula, instructions, URSULA_ACCEL, URSULA_VEL, URSULA_UP_HEIGHT, URSULA_DOWN_HEIGHT)
         
     text_input_button = Button(window, highlightthickness=0, text="Draw text", command=text_input_clicked)
     text_input_button.pack(pady=5)
@@ -53,7 +55,9 @@ if __name__ == "__main__":
             return
         
         fit_elements(instructions)
-        execute_move_list(ursula, instructions)
+
+        ursula.movej(URSULA_HOME, URSULA_ACCEL, URSULA_VEL)
+        execute_move_list(ursula, instructions, URSULA_ACCEL, URSULA_VEL, URSULA_UP_HEIGHT, URSULA_DOWN_HEIGHT)
 
     image_camera_button = Button(window, highlightthickness=0, text="Draw from camera", command=image_camera_clicked)
     image_camera_button.pack(pady=5)
@@ -71,7 +75,9 @@ if __name__ == "__main__":
             return
         
         fit_elements(instructions)
-        execute_move_list(ursula, instructions)
+
+        ursula.movej(URSULA_HOME, URSULA_ACCEL, URSULA_VEL)
+        execute_move_list(ursula, instructions, URSULA_ACCEL, URSULA_VEL, URSULA_UP_HEIGHT, URSULA_DOWN_HEIGHT)
 
     image_file_button = Button(window, highlightthickness=0, text="Draw from file", command=image_file_clicked)
     image_file_button.pack(pady=5)
