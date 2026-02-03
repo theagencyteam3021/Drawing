@@ -1,17 +1,20 @@
 #####################################################################
 # Jacob Palm                                                        #
 # Created on 11/10/2025                                             #
-# Last updated on 1/12/2025                                         #
+# Last updated on 2/2/2026                                          #
 # Takes user input and communicates with the robot to draw on paper #
 #####################################################################
 
 from modules.URrobot import UniversalRobot
 from modules.text_vectorize import get_str_instructions
-import tkinter as tk
+from modules.image_vectorize import take_picture, get_image_instructions
+from tkinter import Tk, Entry, Button
+from tkinter.filedialog import askopenfilename
 
 # Constants
 
 FONT_PATH = "./fonts/arial.ttf"
+IMAGE_OUTPUT_PATH = "./image.png"
 
 # All dimensions are in meters
 PAPER_DIMENSIONS = (11 / 39.37, 8.5 / 39.37) # Paper is landscape, 11 inches by 8.5 inches
@@ -20,20 +23,19 @@ PAPER_PADDING_Y = 0.02
 
 #ROBOT_IP = "192.168.106.128"
 ROBOT_IP = "10.30.21.101"
-ROBOT_PORT = 30002
 
-ROBOT_TCP = [0.00381, -0.00531, 0.16898, -1.3403, -2.8233, 0.0033]
+ROBOT_TCP = [0.00381, -0.00531, 0.18298, -1.3403, -2.8233, 0.0033]
 ROBOT_PLANE = [-0.29, -0.14, -0.092, 0, 0, -4.651]
 ROBOT_HOME = [-0.165, -1.05, 1.658, 4.066, -1.532, 4.747]
 
-ROBOT_DOWN_HEIGHT = 0.01
-ROBOT_UP_HEIGHT = 0.03
+ROBOT_DOWN_HEIGHT = 0
+ROBOT_UP_HEIGHT = 0.02
 ROBOT_ACCEL = 1.2
 ROBOT_VEL = 0.25
 
 # Connect to the robot
 
-ur = UniversalRobot(ROBOT_IP, ROBOT_PORT)
+ur = UniversalRobot(ROBOT_IP)
 
 ur.connect()
 ur.set_tcp(ROBOT_TCP)
@@ -136,23 +138,59 @@ def fit_elements(move_list: list) -> None:
     center_y_offset += (PAPER_DIMENSIONS[1] / 2) - (y_size / 2) - min_y
     offset_elements(move_list, offset_x=center_x_offset, offset_y=center_y_offset)
 
-# Temporary interface for testing. I'll end up making an improved interface once I have a better idea of how we want to take user input.
+# This was supposed to be temporary but maybe it'll end up being permanent?
 if __name__ == "__main__":
-    window = tk.Tk()
-    window.title("Test Interface")
+    window = Tk()
+    window.title("Robot Drawing")
     window.configure(bg="black")
 
-    text_container = tk.Canvas(window, highlightthickness=0, width=50, height=15)
-    text_input_box = tk.Entry(window, highlightthickness=0, width=50)
+    text_input_box = Entry(window, highlightthickness=0, width=50)
     text_input_box.pack(pady=5)
 
+    # Draw text from text box
     def text_input_clicked():
         text = text_input_box.get()
         instructions = get_str_instructions(text, FONT_PATH)
         fit_elements(instructions)
         execute_move_list(instructions)
         
-    text_input_button = tk.Button(window, highlightthickness=0, text="Start drawing", command=text_input_clicked)
+    text_input_button = Button(window, highlightthickness=0, text="Draw text", command=text_input_clicked)
     text_input_button.pack(pady=5)
+
+    # Draw picture from camera
+    def image_camera_clicked():
+        success = take_picture(IMAGE_OUTPUT_PATH)
+        if success == False:
+            print("Couldn't take picture with camera!")
+            return
+        
+        instructions = get_image_instructions(IMAGE_OUTPUT_PATH)
+        if instructions == None:
+            print("Couldn't generate instruction list from image!")
+            return
+        
+        fit_elements(instructions)
+        execute_move_list(instructions)
+
+    image_camera_button = Button(window, highlightthickness=0, text="Draw from camera", command=image_camera_clicked)
+    image_camera_button.pack(pady=5)
+
+    # Draw picture from file
+    def image_file_clicked():
+        image_path = askopenfilename(title="Select PNG", initialdir="./", filetypes=[("PNG files","*.png")])
+        if image_path == "":
+            print("No image file selected!")
+            return
+        
+        instructions = get_image_instructions(image_path)
+        if instructions == None:
+            print("Couldn't generate instruction list from image!")
+            return
+        
+        fit_elements(instructions)
+        execute_move_list(instructions)
+
+    image_file_button = Button(window, highlightthickness=0, text="Draw from file", command=image_file_clicked)
+    image_file_button.pack(pady=5)
 
     window.mainloop()
