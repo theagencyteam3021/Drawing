@@ -1,4 +1,3 @@
-# test if i have new user
 from modules.URrobotFlush import UniversalRobot
 import RobotUrsila
 import time
