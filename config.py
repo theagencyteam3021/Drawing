@@ -15,17 +15,21 @@ PAPER_PADDING_Y = 0.02
 URSULA_IP = "10.30.21.101"
 
 URSULA_TCP = [0.00381, -0.00531, 0.18298, -1.3403, -2.8233, 0.0033]
-URSULA_PLANE = [-0.425, -0.219, -0.002, 0, 0, 0]#[-0.29, -0.14, -0.092, 0, 0, -4.651]
+URSULA_PLANE = [-0.425, -0.219, -0.017, 0, 0, 0]
 URSULA_GENERAL_HOME = [-2.211, -1.620, 1.927, 4.399, -1.587, 3.801]
 URSULA_PAPER_HOME = [-0.237, -1.620, 1.927, 4.399, -1.587, 3.801]
 
 URSULA_DOWN_HEIGHT = 0
 URSULA_UP_HEIGHT = 0.02
 URSULA_ACCEL = 1.2
-URSULA_VEL = 0.25
+URSULA_VEL = 0.4
 
 ROBERT_IP = "10.30.21.100"
 
 # Text configuration
 
 FONT_CURVE_STEPS = 5 # How many line segments curves in text will be split into
+
+# Image configuration
+
+IMAGE_BLUR_SIZE = 9

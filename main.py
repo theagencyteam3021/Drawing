@@ -40,7 +40,6 @@ if __name__ == "__main__":
         text = text_input_box.get()
         instructions = get_str_instructions(text, FONT_PATH)
         fit_elements(instructions)
-        print(instructions)
         
         ursula.movej(URSULA_PAPER_HOME, URSULA_ACCEL, URSULA_VEL)
         execute_move_list(ursula, instructions, URSULA_ACCEL, URSULA_VEL, URSULA_UP_HEIGHT, URSULA_DOWN_HEIGHT)

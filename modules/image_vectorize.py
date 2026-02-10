@@ -1,11 +1,12 @@
 ######################################################################
 # Created on 1/25/2026                                               #
-# Last updated on 2/1/2026                                           #
+# Last updated on 2/9/2026                                           #
 # Image vectorization with Canny edge detection using OpenCV         #
 # https://docs.opencv.org/4.x/da/d22/tutorial_py_canny.html          #
 # https://docs.opencv.org/4.x/d4/d73/tutorial_py_contours_begin.html #
 ######################################################################
 
+from config import *
 import cv2 as cv
 
 # Functions
@@ -33,6 +34,7 @@ def get_image_instructions(image_path: str) -> list | None:
         return
     
     image = cv.flip(image, 0) # Paper coordinates start at bottom left but image coordinates start at upper left, so flip image vertically
+    image = cv.GaussianBlur(image, (IMAGE_BLUR_SIZE, IMAGE_BLUR_SIZE), 0)
     gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
     edges = cv.Canny(gray_image, 30, 50)
     contours, _ = cv.findContours(edges, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
