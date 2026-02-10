@@ -1,7 +1,7 @@
 #####################################################
 # Jacob Palm                                        #
 # Created on 2/2/2026                               #
-# Last updated on 2/2/2026                          #
+# Last updated on 2/9/2026                          #
 # Executes provided move instructions on a UR robot #
 #####################################################
 
@@ -21,11 +21,14 @@ def execute_move_list(ur: UniversalRobot, move_list: list, accel: float, vel: fl
         current_instruction = move_list[i]
         match current_instruction:
             case "up":
-                ur.movel(pose_list, a=accel, v=vel)
+                if len(pose_list) > 0:
+                   ur.movel(pose_list, a=accel, v=vel)
                 current_pos[2] = up_height
                 ur.movel(current_pos, a=accel, v=vel)
                 pose_list = []
             case "down":
+                if len(pose_list) > 0:
+                    ur.movel(pose_list, a=accel, v=vel)
                 current_pos[2] = down_height
                 ur.movel(current_pos, a=accel, v=vel)
                 pose_list = []
