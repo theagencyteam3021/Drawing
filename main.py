@@ -1,9 +1,9 @@
-#####################################################################
-# Jacob Palm                                                        #
-# Created on 11/10/2025                                             #
-# Last updated on 2/2/2026                                          #
-# Takes user input and communicates with the robot to draw on paper #
-#####################################################################
+######################################################################
+# Jacob Palm                                                         #
+# Created on 11/10/2025                                              #
+# Last updated on 2/9/2026                                           #
+# Takes user input and communicates with the robots to draw on paper #
+######################################################################
 
 from config import *
 from modules.URrobotRTDE import UniversalRobot
@@ -14,12 +14,17 @@ from modules.execute_move import execute_move_list
 from tkinter import Tk, Entry, Button
 from tkinter.filedialog import askopenfilename
 
-# Connect to the robot
+# Connect to the robots
 
 ursula = UniversalRobot(URSULA_IP)
 ursula.connect()
 ursula.set_tcp(URSULA_TCP)
 ursula.set_plane(URSULA_PLANE)
+
+#robert = UniversalRobot(ROBERT_IP)
+#robert.connect()
+#robert.set_tcp(ROBERT_TCP)
+#robert.set_plane(ROBERT_PLANE)
 
 # This was supposed to be temporary but maybe it'll end up being permanent?
 if __name__ == "__main__":
@@ -35,9 +40,12 @@ if __name__ == "__main__":
         text = text_input_box.get()
         instructions = get_str_instructions(text, FONT_PATH)
         fit_elements(instructions)
+        print(instructions)
         
-        ursula.movej(URSULA_HOME, URSULA_ACCEL, URSULA_VEL)
+        ursula.movej(URSULA_PAPER_HOME, URSULA_ACCEL, URSULA_VEL)
         execute_move_list(ursula, instructions, URSULA_ACCEL, URSULA_VEL, URSULA_UP_HEIGHT, URSULA_DOWN_HEIGHT)
+        ursula.movej(URSULA_PAPER_HOME, URSULA_ACCEL, URSULA_VEL)
+        ursula.movej(URSULA_GENERAL_HOME, URSULA_ACCEL, URSULA_VEL)
         
     text_input_button = Button(window, highlightthickness=0, text="Draw text", command=text_input_clicked)
     text_input_button.pack(pady=5)
@@ -56,8 +64,10 @@ if __name__ == "__main__":
         
         fit_elements(instructions)
 
-        ursula.movej(URSULA_HOME, URSULA_ACCEL, URSULA_VEL)
+        ursula.movej(URSULA_PAPER_HOME, URSULA_ACCEL, URSULA_VEL)
         execute_move_list(ursula, instructions, URSULA_ACCEL, URSULA_VEL, URSULA_UP_HEIGHT, URSULA_DOWN_HEIGHT)
+        ursula.movej(URSULA_PAPER_HOME, URSULA_ACCEL, URSULA_VEL)
+        ursula.movej(URSULA_GENERAL_HOME, URSULA_ACCEL, URSULA_VEL)
 
     image_camera_button = Button(window, highlightthickness=0, text="Draw from camera", command=image_camera_clicked)
     image_camera_button.pack(pady=5)
@@ -76,8 +86,10 @@ if __name__ == "__main__":
         
         fit_elements(instructions)
 
-        ursula.movej(URSULA_HOME, URSULA_ACCEL, URSULA_VEL)
+        ursula.movej(URSULA_PAPER_HOME, URSULA_ACCEL, URSULA_VEL)
         execute_move_list(ursula, instructions, URSULA_ACCEL, URSULA_VEL, URSULA_UP_HEIGHT, URSULA_DOWN_HEIGHT)
+        ursula.movej(URSULA_PAPER_HOME, URSULA_ACCEL, URSULA_VEL)
+        ursula.movej(URSULA_GENERAL_HOME, URSULA_ACCEL, URSULA_VEL)
 
     image_file_button = Button(window, highlightthickness=0, text="Draw from file", command=image_file_clicked)
     image_file_button.pack(pady=5)
