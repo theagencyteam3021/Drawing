@@ -1,15 +1,13 @@
 ############################################################
 # Jacob Palm                                               #
 # Created on 11/4/2025                                     #
-# Last updated on 1/15/2025                                #
+# Last updated on 2/2/2026                                 #
 # Takes text input and returns list of movements for robot #
 ############################################################
 
+from config import *
+from modules.transformations import offset_elements
 from freetype import Face
-
-# Constants
-
-CURVE_STEPS = 5 # How many line segments curves will be split into
 
 # Globals
 
@@ -53,7 +51,7 @@ def conic_callback(*args: tuple) -> None:
         move_list.append("line")
         move_list.append(x)
         move_list.append(y)
-        t += 1 / CURVE_STEPS
+        t += 1 / FONT_CURVE_STEPS
     current_x = x
     current_y = y
 
@@ -69,18 +67,9 @@ def cubic_callback(*args: tuple) -> None:
         move_list.append("line")
         move_list.append(x)
         move_list.append(y)
-        t += 1 / CURVE_STEPS
+        t += 1 / FONT_CURVE_STEPS
     current_x = x
     current_y = y
-
-# Offsets coordinates in move list by specified amounts
-def offset_elements(move_list: list, offset_x: float = 0, offset_y: float = 0) -> None:
-    for i in range(len(move_list)):
-        x = move_list[i - 1]
-        y = move_list[i]
-        if isinstance(x, (int, float)) and isinstance(y, (int, float)):
-            move_list[i - 1] = x + offset_x
-            move_list[i] = y + offset_y
 
 # Builds instruction list for drawing a text character
 def get_char_instructions(char: str, font_path: str) -> list:
