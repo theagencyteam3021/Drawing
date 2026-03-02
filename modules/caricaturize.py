@@ -1,15 +1,8 @@
 #Run Once at startup
 import torch
-from diffusers import BitsAndBytesConfig, SD3Transformer2DModel
-from diffusers import StableDiffusion3Img2ImgPipeline
+from diffusers import BitsAndBytesConfig, SD3Transformer2DModel,StableDiffusion3Img2ImgPipeline
 from PIL import Image
-from diffusers import (
-    StableDiffusionControlNetPipeline,
-    ControlNetModel,
-    UniPCMultistepScheduler
-)
 from controlnet_aux import LineartDetector
-from PIL import Image
 
 
 
@@ -30,12 +23,14 @@ def create_pipeline(model_id: str = "stabilityai/stable-diffusion-3.5-large"):
         subfolder="transformer",
         quantization_config=nf4_config,
         torch_dtype=torch.bfloat16,
+        local_files_only=True,
     )
 
     local_pipe = StableDiffusion3Img2ImgPipeline.from_pretrained(
         model_id,
         transformer=model_nf4,
         torch_dtype=torch.bfloat16,
+        local_files_only=True,
     )
     local_pipe.enable_model_cpu_offload()
     return local_pipe
@@ -72,9 +67,10 @@ def generate_caricature(source_image_path,
     lineart_img = ImageOps.invert(lineart_img)
     lineart_img = lineart_img.point(lambda x: 0 if x < 160 else 255)
     lineart_img = lineart_img.convert("RGB")
-    lineart_img.save("lineart_bw_fixe15.png")
+    #lineart_img.save("lineart_bw_fixe15.png")
 
-    first_pass = Image.open("lineart_bw_fixe15.png").convert("L")
+    #first_pass = Image.open("lineart_bw_fixe15.png").convert("L")
+    first_pass = lineart_img
     first_pass = ImageOps.autocontrast(first_pass)
     first_pass = first_pass.point(lambda x: 0 if x < 200 else 255)
     first_pass = first_pass.convert("RGB")
@@ -131,5 +127,5 @@ def generate_caricature(source_image_path,
     ).images[0]
 
     result.save(output_path)
-    print(f"Final Pass complete for {gender}. Saved to {output_path}")
+    print(f"Final Pass complete &{gender} caricature drawn. Saved to {output_path}")
     return output_path
