@@ -5,14 +5,14 @@
 # Helper function for prompting the user with choices #
 #######################################################
 
-from tkinter import Tk, Button, Label
+from tkinter import Tk, Toplevel, Button, Label
 from PIL import Image, ImageTk
 
 # Functions
 
 # Takes input for prompt title, choices and image (optional) and returns the chosen option
-def choice_prompt(prompt_title: str, options: tuple, image_path: str | None) -> str:
-    window = Tk()
+def choice_prompt(tk_instance: Tk, prompt_title: str, options: tuple, image_path: str | None = None) -> str:
+    window = Toplevel(tk_instance)
     window.title(prompt_title)
     window.configure(bg="black")
 
@@ -23,11 +23,14 @@ def choice_prompt(prompt_title: str, options: tuple, image_path: str | None) -> 
         image_label = Label(window, borderwidth=0, image=image)
         image_label.image = image
         image_label.pack(pady=5)
+    else:
+        window.geometry("300x300")
 
     chosen_option = ""
     def option_clicked(option):
         nonlocal chosen_option
         chosen_option = option
+        window.quit()
         window.destroy()
 
     for option in options:

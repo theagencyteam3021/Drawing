@@ -15,7 +15,6 @@ from modules.paper_grabber import load_paper
 from modules.choice_prompt import choice_prompt
 from modules.caricaturize import create_pipeline, generate_caricature
 from tkinter import Tk, Entry, Button, Label
-from tkinter.filedialog import askopenfilename
 from PIL import Image, ImageTk
 import cv2 as cv
 
@@ -48,8 +47,8 @@ if __name__ == "__main__":
     def text_input_clicked():
         text = text_input_box.get()
         instructions = get_str_instructions(text, FONT_PATH)
+
         fit_elements(instructions)
-        
         ursula.movej(URSULA_PAPER_HOME, URSULA_ACCEL, URSULA_VEL)
         execute_move_list(ursula, instructions, URSULA_ACCEL, URSULA_VEL, URSULA_UP_HEIGHT, URSULA_DOWN_HEIGHT)
         ursula.movej(URSULA_PAPER_HOME, URSULA_ACCEL, URSULA_VEL)
@@ -57,28 +56,6 @@ if __name__ == "__main__":
         
     text_input_button = Button(window, borderwidth=0, text="Draw text", command=text_input_clicked)
     text_input_button.pack(pady=5)
-
-    # Draw picture from file
-    def image_file_clicked():
-        image_path = askopenfilename(title="Select PNG", initialdir="./", filetypes=[("PNG files","*.png")])
-        if image_path == "":
-            print("No image file selected!")
-            return
-        
-        instructions = get_image_instructions(image_path)
-        if instructions == None:
-            print("Couldn't generate instruction list from image!")
-            return
-        
-        fit_elements(instructions)
-
-        ursula.movej(URSULA_PAPER_HOME, URSULA_ACCEL, URSULA_VEL)
-        execute_move_list(ursula, instructions, URSULA_ACCEL, URSULA_VEL, URSULA_UP_HEIGHT, URSULA_DOWN_HEIGHT)
-        ursula.movej(URSULA_PAPER_HOME, URSULA_ACCEL, URSULA_VEL)
-        ursula.movej(URSULA_GENERAL_HOME, URSULA_ACCEL, URSULA_VEL)
-
-    image_file_button = Button(window, borderwidth=0, text="Draw from file", command=image_file_clicked)
-    image_file_button.pack(pady=5)
 
     # Draw picture from camera
     def image_camera_clicked():
@@ -92,24 +69,32 @@ if __name__ == "__main__":
             print("Couldn't generate instruction list from image!")
             return
 
-        gender = choice_prompt("Gender", ("Male", "Female"))
+        gender = choice_prompt(window, "Gender", ("Male", "Female"))
         if gender == "":
             print("No option selected for gender!")
             return
         
-        has_glasses = choice_prompt("Glasses", ("Has glasses", "Does not have glasses"))
+        has_glasses = choice_prompt(window, "Glasses", ("Has glasses", "Does not have glasses"))
         if has_glasses == "":
             print("No option selected for glasses!")
             return
-        
-        generate_caricature(IMAGE_OUTPUT_PATH, gender, has_glasses, IMAGE_OUTPUT_PATH)
-        
-        fit_elements(instructions)
+        elif has_glasses == "Does not have glasses":
+            has_glasses = "" # Including glasses in the prompt at all adds them, so leave the glasses section blank
 
-        ursula.movej(URSULA_PAPER_HOME, URSULA_ACCEL, URSULA_VEL)
-        execute_move_list(ursula, instructions, URSULA_ACCEL, URSULA_VEL, URSULA_UP_HEIGHT, URSULA_DOWN_HEIGHT)
-        ursula.movej(URSULA_PAPER_HOME, URSULA_ACCEL, URSULA_VEL)
-        ursula.movej(URSULA_GENERAL_HOME, URSULA_ACCEL, URSULA_VEL)
+        while True:
+            generate_caricature(IMAGE_OUTPUT_PATH, gender, has_glasses, IMAGE_OUTPUT_PATH, pipeline)
+
+            decision = choice_prompt(window, "Output Caricature", ("Accept", "Reroll", "Cancel"), IMAGE_OUTPUT_PATH)
+            if decision == "Reroll":
+                continue
+            elif decision == "Accept":
+                fit_elements(instructions)
+                ursula.movej(URSULA_PAPER_HOME, URSULA_ACCEL, URSULA_VEL)
+                execute_move_list(ursula, instructions, URSULA_ACCEL, URSULA_VEL, URSULA_UP_HEIGHT, URSULA_DOWN_HEIGHT)
+                ursula.movej(URSULA_PAPER_HOME, URSULA_ACCEL, URSULA_VEL)
+                ursula.movej(URSULA_GENERAL_HOME, URSULA_ACCEL, URSULA_VEL)
+            break
+                
 
     image_camera_button = Button(window, borderwidth=0, text="Draw from camera (AI)", command=image_camera_clicked)
     image_camera_button.pack(pady=5)
