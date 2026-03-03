@@ -1,10 +1,9 @@
-#Run Once at startup
 import torch
 from diffusers import BitsAndBytesConfig, SD3Transformer2DModel,StableDiffusion3Img2ImgPipeline
-from PIL import Image
+from PIL import Image, ImageOps
 from controlnet_aux import LineartDetector
 
-
+# Functions
 
 def create_pipeline(model_id: str = "stabilityai/stable-diffusion-3.5-large"):
     """Create and return a configured Stable Diffusion img2img pipeline.
@@ -35,10 +34,9 @@ def create_pipeline(model_id: str = "stabilityai/stable-diffusion-3.5-large"):
     local_pipe.enable_model_cpu_offload()
     return local_pipe
 
-
-# -------------------------
 def generate_caricature(source_image_path,
-                        gender=None,
+                        gender,
+                        has_glasses,
                         output_path=None,
                         pipe_instance=None):
     """Create a cleaned lineart from a source image and run the final stylization pass.
@@ -52,7 +50,6 @@ def generate_caricature(source_image_path,
     Returns:
         str: path to saved output image.
     """
-    from PIL import ImageOps
 
     # Load source image
     src_img = Image.open(source_image_path).convert("RGB")
@@ -60,45 +57,20 @@ def generate_caricature(source_image_path,
     # Create lineart
     detector = LineartDetector.from_pretrained("lllyasviel/Annotators", local_files_only=True)
     control_image = detector(src_img, detect_resolution=512, image_resolution=512)
-    control_image.save("lineart15.png")
 
     # Clean and threshold
-    lineart_img = Image.open("lineart15.png").convert("L")
-    lineart_img = ImageOps.invert(lineart_img)
-    lineart_img = lineart_img.point(lambda x: 0 if x < 160 else 255)
-    lineart_img = lineart_img.convert("RGB")
-    #lineart_img.save("lineart_bw_fixe15.png")
-
-    #first_pass = Image.open("lineart_bw_fixe15.png").convert("L")
-    first_pass = lineart_img
+    first_pass = control_image.convert("L")
+    first_pass = ImageOps.invert(first_pass)
+    first_pass = first_pass.point(lambda x: 0 if x < 160 else 255)
     first_pass = ImageOps.autocontrast(first_pass)
     first_pass = first_pass.point(lambda x: 0 if x < 200 else 255)
     first_pass = first_pass.convert("RGB")
     first_pass.save("lineart10.png")
-    print("Lineart cleaned")
 
-    # Ask for gender if not provided
-    if gender is None:
-        gender = input("Gender: Male(m) or Female(f) or caner(c): ").strip().lower()
-
-    if gender not in ("m", "f"):
-        raise ValueError("gender must be 'm' or 'f'")
-
-    if gender == "c":
-        quit()
-
-    if output_path is None:
-        output_path = f"caricature_final_{'male' if gender=='m' else 'female'}.png"
-
-    # Prepare prompts
-    if gender == "m":
-        prompt = (
-            "Make it look like a hand drawn cartoon caricature, please keep the male gender characteristics,if glasses are present keep them, exaggerate facial features, "
-        )
-    else:
-        prompt = (
-            "Make it look like a hand drawn cartoon caricature, please keep the female gender characteristics,if glasses are present keep them, exaggerate the facial features, "
-        )
+    # Prepare prompt
+    prompt = (
+        f"Make it look like a hand drawn cartoon caricature, please keep the {gender} gender characteristics, {has_glasses}, exaggerate facial features, "
+    )
 
     negative_prompt = (
         "realistic, realism, portrait, "
@@ -120,12 +92,12 @@ def generate_caricature(source_image_path,
     result = pipe_instance(
         prompt=prompt,
         negative_prompt=negative_prompt,
-        image=Image.open("lineart10.png"),
+        image=first_pass,
         strength=0.7,
         guidance_scale=8,
         num_inference_steps=35,
     ).images[0]
 
     result.save(output_path)
-    print(f"Final Pass complete &{gender} caricature drawn. Saved to {output_path}")
+    
     return output_path
