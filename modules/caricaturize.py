@@ -1,44 +1,40 @@
+import os
+from turtle import width
+from unittest import result
+from PIL import Image
 import torch
-from diffusers import BitsAndBytesConfig, SD3Transformer2DModel,StableDiffusion3Img2ImgPipeline
-from PIL import Image, ImageOps
-from controlnet_aux import LineartDetector
+from diffusers import QwenImageEditPlusPipeline
+from diffusers.utils import load_image
 
 # Functions
 
-def create_pipeline(model_id: str = "stabilityai/stable-diffusion-3.5-large"):
+def create_pipeline(model_id: str = "ovedrive/Qwen-Image-Edit-2509-4bit"):
     """Create and return a configured Stable Diffusion img2img pipeline.
 
     Returns a `StableDiffusion3Img2ImgPipeline` ready for use. This function
     encapsulates the heavy model loading so it can be called on demand.
     """
-    nf4_config = BitsAndBytesConfig(
-        load_in_4bit=True,
-        bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=torch.bfloat16,
-    )
+    pipe = QwenImageEditPlusPipeline.from_pretrained(model_id, torch_dtype=torch.bfloat16)
+    print("pipeline loaded") # not true but whatever. do not move to cuda
 
-    model_nf4 = SD3Transformer2DModel.from_pretrained(
-        model_id,
-        subfolder="transformer",
-        quantization_config=nf4_config,
-        torch_dtype=torch.bfloat16,
-        local_files_only=True,
-    )
+    pipe.set_progress_bar_config(disable=None)
 
-    local_pipe = StableDiffusion3Img2ImgPipeline.from_pretrained(
-        model_id,
-        transformer=model_nf4,
-        torch_dtype=torch.bfloat16,
-        local_files_only=True,
-    )
-    local_pipe.enable_model_cpu_offload()
-    return local_pipe
+    # optionally load LoRA weights to speed up inference
+    # pipe.load_lora_weights("lightx2v/Qwen-Image-Lightning", weight_name="Qwen-Image-Lightning-8steps-V1.1.safetensors")
+    #pipe.load_lora_weights("lightx2v/Qwen-Image-Lightning", weight_name="Qwen-Image-Lightning-4steps-V2.0-bf16.safetensors")
+    pipe.load_lora_weights("lightx2v/Qwen-Image-Lightning", weight_name="Qwen-Image-Lightning-8steps-V2.0-bf16.safetensors")
 
-def generate_caricature(source_image_path,
-                        gender,
-                        has_glasses,
-                        output_path=None,
-                        pipe_instance=None):
+    pipe.load_lora_weights("caricature_v1.1_000002500.safetensors")
+
+    #pipe.load_lora_weights("peteromallet/Qwen-Image-Edit-InStyle", weight_name="InStyle-0.5.safetensors")
+
+    pipe.enable_model_cpu_offload()
+
+    #generator = torch.Generator(device="cuda").manual_seed(42)
+    return pipe
+
+
+def generate_caricature(pipe, source_image_path,out_image_path ="Caricature_finished.png",caracaturize = False,):
     """Create a cleaned lineart from a source image and run the final stylization pass.
 
     Args:
@@ -48,56 +44,46 @@ def generate_caricature(source_image_path,
         pipe_instance: the pre-initialized StableDiffusion3Img2ImgPipeline instance.
 
     Returns:
-        str: path to saved output image.
-    """
+        str: path to saved output image."""
 
     # Load source image
-    src_img = Image.open(source_image_path).convert("RGB")
+    image = load_image(source_image_path).convert("RGB")
+    # resize image but maintain aspect ratio
+    max_size = 512
+    width, height = image.size
+    if max(width, height) > max_size:
+        if width > height:
+            new_width = max_size
+            new_height = int(max_size * height / width)
+        else:
+            new_height = max_size
+            new_width = int(max_size * width / height)
+        image = image.resize((new_width, new_height), resample=Image.BICUBIC)
 
-    # Create lineart
-    detector = LineartDetector.from_pretrained("lllyasviel/Annotators", local_files_only=True)
-    control_image = detector(src_img, detect_resolution=512, image_resolution=512)
+    if caracaturize:
+        prompt = "Turn the person into a minimalistic black and white headshot coloring book page with a plain white background and simple bolded lines in a caricature style."
+        negative_prompt = "shading, color, greyscale, beard, colored background, big eyes, full body, cartoon eyes, hyperextended neck, big cheeks"
+        inputs = {
+            "image": image,
+            "prompt": prompt,
+            "generator": None,
+            "true_cfg_scale": 8.2,
+            "negative_prompt": negative_prompt,
+            "num_inference_steps": 12,
+        }
+    else:
+        prompt = "Turn the person into a black and white coloring book page with a plain white background and simple bolded lines. Please keep the person the same age."
+        negative_prompt = "shading, color, greyscale, colored background, complex"
+        inputs = {
+            "image": image,
+            "prompt": prompt,
+            "generator": None,
+            "true_cfg_scale": 2,
+            "negative_prompt": negative_prompt,
+            "num_inference_steps": 8,
+        }
 
-    # Clean and threshold
-    first_pass = control_image.convert("L")
-    first_pass = ImageOps.invert(first_pass)
-    first_pass = first_pass.point(lambda x: 0 if x < 160 else 255)
-    first_pass = ImageOps.autocontrast(first_pass)
-    first_pass = first_pass.point(lambda x: 0 if x < 200 else 255)
-    first_pass = first_pass.convert("RGB")
-    first_pass.save("lineart10.png")
+    image_out = pipe(**inputs).images[0]
 
-    # Prepare prompt
-    prompt = (
-        f"Make it look like a hand drawn cartoon caricature, please keep the {gender} gender characteristics, {has_glasses}, exaggerate facial features, "
-    )
-
-    negative_prompt = (
-        "realistic, realism, portrait, "
-        "shading, shadows, gradients, gray tones, "
-        "dark background, black background, "
-        "lighting, depth, volume, contrast, "
-        "engraving, etching, crosshatching, "
-        "digital art, clean vector, polished illustration"
-    )
-
-    # Ensure pipeline is available (create on demand)
-    if pipe_instance is None:
-        global pipe
-        if pipe is None:
-            pipe = create_pipeline()
-        pipe_instance = pipe
-
-    # Final stylization pass using the cleaned lineart
-    result = pipe_instance(
-        prompt=prompt,
-        negative_prompt=negative_prompt,
-        image=first_pass,
-        strength=0.7,
-        guidance_scale=8,
-        num_inference_steps=35,
-    ).images[0]
-
-    result.save(output_path)
-    
-    return output_path
+    image_out.save(out_image_path)
+    return out_image_path
