@@ -1,17 +1,17 @@
 ######################################################################
 # Jacob Palm                                                         #
 # Created on 11/10/2025                                              #
-# Last updated on 3/2/2026                                           #
+# Last updated on 3/11/2026                                          #
 # Takes user input and communicates with the robots to draw on paper #
 ######################################################################
 
 from config import *
 from modules.URrobotRTDE import UniversalRobot
 from modules.text_vectorize import get_str_instructions
-from modules.image_vectorize import take_picture, get_image_instructions
+from modules.image_vectorize import take_picture, image_to_minimal_svg, svg_to_move_list
 from modules.transformations import fit_elements
 from modules.execute_move import execute_move_list
-from modules.paper_grabber import load_paper
+from modules.paper_grabber import load_paper, return_paper
 from modules.choice_prompt import choice_prompt
 from modules.caricaturize import create_pipeline, generate_caricature
 from tkinter import Tk, Entry, Button, Label
@@ -21,14 +21,19 @@ import cv2 as cv
 # Connect to the robots
 
 ursula = UniversalRobot(URSULA_IP)
-#ursula.connect()
-#ursula.set_tcp(URSULA_TCP)
-#ursula.set_plane(URSULA_PLANE)
+ursula.connect()
+ursula.set_tcp(URSULA_TCP)
+ursula.set_plane(URSULA_PLANE)
 
-#robert = UniversalRobot(ROBERT_IP)
+robert = UniversalRobot(ROBERT_IP)
 #robert.connect()
 
+#robert.movej(ROBERT_RETURN_TRAY_UP, ROBERT_ACCEL, ROBERT_VEL)
+#robert.movej(ROBERT_GRAB_TRAY_JOINTS, ROBERT_ACCEL, ROBERT_VEL_PAPER)
+#robert.movej(ROBERT_RETURN_TRAY_UP, ROBERT_ACCEL, ROBERT_VEL_NO_PAPER)
+#robert.movel(ROBERT_GRAB_TRAY_COORDS, ROBERT_ACCEL, ROBERT_VEL)
 #load_paper(robert)
+#return_paper(robert)
 
 # Create AI pipeline
 
@@ -36,6 +41,29 @@ pipeline = create_pipeline()
 
 # This was supposed to be temporary but maybe it'll end up being permanent?
 if __name__ == "__main__":
+    def draw_cycle(move_list):
+        fit_elements(move_list)
+        ursula.movej(URSULA_GENERAL_HOME, URSULA_ACCEL, URSULA_VEL)
+
+        #load_success = load_paper(robert)
+        #if load_success == True:
+        #    print("Paper loaded properly")
+        #else:
+        #    print("Something blew up while loading the paper, manual intervention may be needed")
+        #    return
+        
+        ursula.movej(URSULA_PAPER_HOME, URSULA_ACCEL, URSULA_VEL)
+        execute_move_list(ursula, move_list, URSULA_ACCEL, URSULA_VEL, URSULA_UP_HEIGHT, URSULA_DOWN_HEIGHT)
+        ursula.movej(URSULA_PAPER_HOME, URSULA_ACCEL, URSULA_VEL)
+        ursula.movej(URSULA_GENERAL_HOME, URSULA_ACCEL, URSULA_VEL)
+
+        #return_success = return_paper(robert)
+        #if return_success == True:
+        #    print("Paper returned properly")
+        #else:
+        #    print("Something blew up while returning the paper, manual intervention may be needed")
+        #    return
+
     window = Tk()
     window.title("Robot Drawing")
     window.configure(bg="black")
@@ -48,11 +76,7 @@ if __name__ == "__main__":
         text = text_input_box.get()
         instructions = get_str_instructions(text, FONT_PATH)
 
-        fit_elements(instructions)
-        ursula.movej(URSULA_PAPER_HOME, URSULA_ACCEL, URSULA_VEL)
-        execute_move_list(ursula, instructions, URSULA_ACCEL, URSULA_VEL, URSULA_UP_HEIGHT, URSULA_DOWN_HEIGHT)
-        ursula.movej(URSULA_PAPER_HOME, URSULA_ACCEL, URSULA_VEL)
-        ursula.movej(URSULA_GENERAL_HOME, URSULA_ACCEL, URSULA_VEL)
+        draw_cycle(instructions)
         
     text_input_button = Button(window, borderwidth=0, text="Draw text", command=text_input_clicked)
     text_input_button.pack(pady=5)
@@ -63,38 +87,23 @@ if __name__ == "__main__":
         if success == False:
             print("Couldn't take picture with camera!")
             return
-        
-        instructions = get_image_instructions(IMAGE_OUTPUT_PATH)
-        if instructions == None:
-            print("Couldn't generate instruction list from image!")
-            return
-
-        gender = choice_prompt(window, "Gender", ("Male", "Female"))
-        if gender == "":
-            print("No option selected for gender!")
-            return
-        
-        has_glasses = choice_prompt(window, "Glasses", ("Has glasses", "Does not have glasses"))
-        if has_glasses == "":
-            print("No option selected for glasses!")
-            return
-        elif has_glasses == "Does not have glasses":
-            has_glasses = "" # Including glasses in the prompt at all adds them, so leave the glasses section blank
 
         while True:
-            generate_caricature(IMAGE_OUTPUT_PATH, gender, has_glasses, IMAGE_OUTPUT_PATH, pipeline)
+            generate_caricature(pipe=pipeline, source_image_path=IMAGE_OUTPUT_PATH, out_image_path=IMAGE_OUTPUT_PATH, caricaturize=False)
 
             decision = choice_prompt(window, "Output Caricature", ("Accept", "Reroll", "Cancel"), IMAGE_OUTPUT_PATH)
             if decision == "Reroll":
                 continue
             elif decision == "Accept":
-                fit_elements(instructions)
-                ursula.movej(URSULA_PAPER_HOME, URSULA_ACCEL, URSULA_VEL)
-                execute_move_list(ursula, instructions, URSULA_ACCEL, URSULA_VEL, URSULA_UP_HEIGHT, URSULA_DOWN_HEIGHT)
-                ursula.movej(URSULA_PAPER_HOME, URSULA_ACCEL, URSULA_VEL)
-                ursula.movej(URSULA_GENERAL_HOME, URSULA_ACCEL, URSULA_VEL)
-            break
-                
+                image_to_minimal_svg(IMAGE_OUTPUT_PATH, IMAGE_OUTPUT_PATH)
+                instructions = svg_to_move_list(IMAGE_OUTPUT_PATH)
+                #instructions = get_image_instructions(IMAGE_OUTPUT_PATH)
+                if instructions == None:
+                    print("Couldn't generate instruction list from image!")
+                    return
+
+                draw_cycle(instructions)
+            break  
 
     image_camera_button = Button(window, borderwidth=0, text="Draw from camera (AI)", command=image_camera_clicked)
     image_camera_button.pack(pady=5)

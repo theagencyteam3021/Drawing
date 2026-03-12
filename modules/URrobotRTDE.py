@@ -399,15 +399,8 @@ class UniversalRobot:
         Returns:
             bool: The state of the digital input (True for HIGH, False for LOW).
         """
-        # Ensure the required input is in the recipe
-        if "actual_digital_input_bits" not in self.rtde_r.get_recipe_items():
-            raise Exception("The 'actual_digital_input_bits' item is not in the RTDE recipe. Please add it to the recipe to use this function.")
         
-        digital_in_bits = self.rtde_r.getActualDigitalInputBits()
-        if digital_in_bits is None:
-            raise ConnectionAbortedError("Failed to get digital input bits. Check connection and recipe.")
-            
-        return (digital_in_bits >> pin) & 1 == 1
+        return self.rtde_r.getDigitalInState(pin)
 
     def getDigitalInState(self, pin: int) -> bool:
         """
