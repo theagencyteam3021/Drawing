@@ -2,6 +2,7 @@
 
 FONT_PATH = "./fonts/arial.ttf"
 IMAGE_OUTPUT_PATH = "./image.png"
+SVG_OUTPUT_PATH = "./image.svg"
 
 # Paper configuration (in meters)
 
@@ -28,11 +29,13 @@ URSULA_VEL = 0.4
 ROBERT_IP = "10.30.21.100"
 
 ROBERT_GRAB_TRAY_JOINTS = [-1.148, -1.672, -2.448, -0.596, 1.570, 1.978] # Get arm in a repeatable position first
-ROBERT_GRAB_TRAY_COORDS = [-0.026, -0.256, -0.112, 2.206, 2.245, 0] # Highest position of the grab tray in coordinates
-ROBERT_GRAB_TRAY_LOW_HEIGHT = -0.135 # Lowest height of the grab tray
-ROBERT_GRAB_TRAY_INCREMENT = 0.001
+ROBERT_GRAB_TRAY_COORDS = [-0.026, -0.2575, -0.112, 2.206, 2.245, 0] # Highest position of the grab tray in coordinates
+ROBERT_GRAB_TRAY_MIN_Y = -0.256
+ROBERT_GRAB_TRAY_MIN_Z = -0.137 # Lowest height of the grab tray
+ROBERT_GRAB_TRAY_Y_INCREMENT = 0.000025
+ROBERT_GRAB_TRAY_Z_INCREMENT = 0.0005
 
-ROBERT_PLATEN_UP = [-0.453, -1.994, -1.986, -0.693, 1.567, 2.673]
+ROBERT_PLATEN_UP = [-0.409, -2.093, -1.828, -0.794, 1.570, 2.726]
 ROBERT_PLATEN_DOWN = [-0.409, -2.341, -1.864, -0.510, 1.570, 2.726]
 ROBERT_RETURN_TRAY_UP = [-2.082, -2.117, -1.745, -0.845, 1.61, 1.044]
 ROBERT_RETURN_TRAY_DOWN = [-2.082, -2.372, -1.788, -0.547, 1.61, 1.044]
@@ -41,13 +44,13 @@ ROBERT_ACCEL = 1
 ROBERT_VEL_NO_PAPER = 0.15
 ROBERT_VEL_PAPER = 0.05 # Slower speed while holding paper
 
-VACUUM_TIMEOUT = 6
+VACUUM_TIMEOUT = 10
 VACUUM_POLL_FREQ = 1
 
 # I/O mappings
 
-GRIPPER_VACUUM_SENSOR = 0
-PLATEN_VACUUM_SENSOR = 1
+GRIPPER_VACUUM_SENSOR = 1
+PLATEN_VACUUM_SENSOR = 0
 GRIPPER_VALVE = 3
 PLATEN_VALVE = 2
 GRIPPER_DISTANCE_SENSOR = 4
