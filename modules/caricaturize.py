@@ -34,7 +34,7 @@ def create_pipeline(model_id: str = "ovedrive/Qwen-Image-Edit-2509-4bit"):
     return pipe
 
 
-def generate_caricature(pipe, source_image_path,out_image_path ="Caricature_finished.png",caracaturize = False,):
+def generate_caricature(pipe, source_image_path,out_image_path ="Caricature_finished.png",caricaturize = False,):
     """Create a cleaned lineart from a source image and run the final stylization pass.
 
     Args:
@@ -60,7 +60,7 @@ def generate_caricature(pipe, source_image_path,out_image_path ="Caricature_fini
             new_width = int(max_size * width / height)
         image = image.resize((new_width, new_height), resample=Image.BICUBIC)
 
-    if caracaturize:
+    if caricaturize:
         prompt = "Turn the person into a minimalistic black and white headshot coloring book page with a plain white background and simple bolded lines in a caricature style."
         negative_prompt = "shading, color, greyscale, beard, colored background, big eyes, full body, cartoon eyes, hyperextended neck, big cheeks"
         inputs = {

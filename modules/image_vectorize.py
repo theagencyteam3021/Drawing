@@ -19,6 +19,41 @@ import xml.etree.ElementTree as ET
 
 # Functions
 
+def save_svg(svg_path: str, output_file: str) -> bool:
+    """
+    Save an SVG file to a new location.
+    
+    Args:
+        svg_path (str or Path): Path to source SVG file
+        output_file (str or Path): Output file path where SVG will be saved
+    
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    try:
+        svg_path = Path(svg_path)
+        output_file = Path(output_file)
+        
+        # Read the source SVG
+        if not svg_path.exists():
+            print(f"Error: Source SVG file not found: {svg_path}")
+            return False
+        
+        with open(svg_path, 'r', encoding='utf-8') as f:
+            svg_content = f.read()
+        
+        # Ensure output directory exists
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Write to output file
+        with open(output_file, 'w', encoding='utf-8') as f:
+            f.write(svg_content)
+        
+        return True
+    except Exception as e:
+        print(f"Error saving SVG: {e}")
+        return False
+
 # Parses SVG path data and extracts coordinates
 def parse_svg_path(path_data: str) -> list:
     """
@@ -181,7 +216,7 @@ def svg_to_move_list(svg_path: str) -> list | None:
 
 
 def execute_svg_on_robot(svg_path: str, ur, accel: float = 0.8, vel: float = 0.2, 
-                        up_height: float = 0.0, down_height: float = -0.005) -> bool:
+                        up_height: float = 0.02, down_height: float = 0.00) -> bool:
     """
     Parse SVG and execute drawing commands on UR robot using URrobotRTDE.
     
@@ -222,6 +257,9 @@ def take_picture(output_path: str) -> bool:
     cam.release()
     if not ret:
         return False
+    # rotate frame 90 degrees clockwise
+    frame = cv.rotate(frame, cv.ROTATE_90_CLOCKWISE)
+    
     cv.imwrite(output_path, frame)
 
     return True
@@ -264,14 +302,14 @@ def get_image_instructions(image_path: str) -> list | None:
 def image_to_minimal_svg(
     image_path,
     svg_path,
-    threshold=200,
+    threshold=250,
     blur=1,
-    turdsize=50,
+    turdsize=2,
     alphamax=1.0,
-    opttolerance=0.2,
+    opttolerance=0.05,
 ):
     """
-    Convert a line-art image to a minimal, plotter-friendly SVG.
+    Convert a line-art image to a minimal, plotter-friendly SVG with detail preservation.
 
     Parameters
     ----------
@@ -280,15 +318,23 @@ def image_to_minimal_svg(
     svg_path : str or Path
         Output SVG path
     threshold : int
-        Binarization threshold (higher = fewer lines)
+        Binarization threshold (higher = fewer lines, lower = more detail)
+        Default 170 preserves more details. Use 100-150 for minimal paths.
     blur : int
         Gaussian blur radius (0 or 1 recommended)
     turdsize : int
-        Potrace speck removal (higher = fewer paths)
+        Potrace speck removal (higher = fewer paths, lower = more detail)
+        Default 2 keeps small features. Use 10+ for minimal paths.
     alphamax : float
         Curve smoothing (1.0–1.5 typical)
     opttolerance : float
-        Path simplification (lower = fewer nodes)
+        Path simplification (higher = fewer nodes, lower = more detail)
+        Default 0.05 preserves fine curves. Use 0.2+ for minimal nodes.
+    
+    Notes
+    -----
+    For even better detail preservation, consider using image_to_contour_svg() instead,
+    which uses contour tracing rather than Potrace skeletonization.
     """
 
     image_path = Path(image_path)
@@ -464,6 +510,63 @@ def image_to_minimal_svg_no_potrace(
         f.write("</svg>")
 
     return svg_path
+
+
+def image_to_svg_high_detail(
+    input_path,
+    output_path,
+    threshold=200,
+    simplify_epsilon=0.5,
+    pen_width_mm=1.0,
+    paper_width_in=8.5,
+    paper_height_in=11.0,
+    upscale=5,
+):
+    """
+    Convert image to high-detail SVG using contour tracing.
+    
+    This is a convenience wrapper around image_to_contour_svg() with parameters
+    optimized for maximum detail preservation. Use this when you need to capture
+    fine details in your image.
+
+    Parameters
+    ----------
+    input_path : str or Path
+        Input image (PNG/JPG/etc)
+    output_path : str or Path
+        Output SVG path
+    threshold : int
+        Binarization threshold. Default 150 captures more detail.
+    simplify_epsilon : float
+        Contour simplification (lower = more detail). Default 0.5 for fine detail.
+    pen_width_mm : float
+        Output pen stroke width in millimeters
+    paper_width_in : float
+        Paper width in inches (default 8.5 = letter width)
+    paper_height_in : float
+        Paper height in inches (default 11 = letter height)
+    upscale : int
+        Resolution upscaling (default 5 for maximum detail)
+    
+    Returns
+    -------
+    Path
+        Path to generated SVG file
+    
+    Examples
+    --------
+    >>> image_to_svg_high_detail('input.jpg', 'output.svg')
+    """
+    return image_to_contour_svg(
+        input_path,
+        output_path,
+        threshold=threshold,
+        simplify_epsilon=simplify_epsilon,
+        pen_width_mm=pen_width_mm,
+        paper_width_in=paper_width_in,
+        paper_height_in=paper_height_in,
+        upscale=upscale,
+    )
 
 
 def image_to_plotter_svg(
@@ -724,8 +827,8 @@ def merge_close_strokes(strokes, merge_dist):
 
 
 def image_to_contour_svg(
-    input_path,
-    output_path,
+    image_path,
+    svg_path,
     threshold=170,
     simplify_epsilon=1.0,
     pen_width_mm=1.0,
@@ -733,8 +836,47 @@ def image_to_contour_svg(
     paper_height_in=11.0,
     upscale=3,
 ):
-    # Load image grayscale & upscale
-    img = cv.imread(input_path, cv.IMREAD_GRAYSCALE)
+    """
+    Convert image to SVG using contour tracing (best for fine detail preservation).
+    
+    This method preserves more fine details than Potrace-based approaches by
+    tracing image contours directly without skeletonization.
+
+    Parameters
+    ----------
+    input_path : str or Path
+        Input image (PNG/JPG/etc)
+    output_path : str or Path
+        Output SVG path
+    threshold : int
+        Binarization threshold (100-200). Lower = more fine details captured.
+        Default 170 balances detail and noise.
+    simplify_epsilon : float
+        Contour simplification strength (0.5–2.0).
+        Lower values preserve more detail. Default 1.0 is good for most cases.
+    pen_width_mm : float
+        Output pen stroke width in millimeters
+    paper_width_in : float
+        Paper width in inches (default 8.5 = letter width)
+    paper_height_in : float
+        Paper height in inches (default 11 = letter height)
+    upscale : int
+        Resolution upscaling factor (3-5 recommended for better detail).
+        Higher values = finer detail but slower processing.
+    
+    Returns
+    -------
+    Path
+        Path to generated SVG file
+    """
+    image_path = Path(image_path)
+    svg_path = Path(svg_path)
+
+    # --- Load & upscale ---
+    img = cv.imread(str(image_path), cv.IMREAD_GRAYSCALE)
+    if img is None:
+        raise ValueError("Could not read image")
+
     img = cv.resize(img, None, fx=upscale, fy=upscale, interpolation=cv.INTER_CUBIC)
 
     # Threshold to binary inverted (lines are white)
@@ -758,7 +900,7 @@ def image_to_contour_svg(
     scale = 1 / px_to_in
 
     # Write SVG
-    with open(output_path, "w") as f:
+    with open(svg_path, "w") as f:
         f.write(f'<svg xmlns="http://www.w3.org/2000/svg" '
                 f'width="{paper_width_in}in" height="{paper_height_in}in" '
                 f'viewBox="0 0 {paper_width_in} {paper_height_in}">\n')

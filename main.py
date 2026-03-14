@@ -8,7 +8,7 @@
 from config import *
 from modules.URrobotRTDE import UniversalRobot
 from modules.text_vectorize import get_str_instructions
-from modules.image_vectorize import take_picture, image_to_minimal_svg, svg_to_move_list
+from modules.image_vectorize import take_picture, image_to_minimal_svg, svg_to_move_list,image_to_svg_high_detail
 from modules.transformations import fit_elements
 from modules.execute_move import execute_move_list
 from modules.paper_grabber import load_paper, return_paper
@@ -95,14 +95,15 @@ if __name__ == "__main__":
             if decision == "Reroll":
                 continue
             elif decision == "Accept":
-                image_to_minimal_svg(IMAGE_OUTPUT_PATH, IMAGE_OUTPUT_PATH)
-                instructions = svg_to_move_list(IMAGE_OUTPUT_PATH)
+                image_to_minimal_svg(IMAGE_OUTPUT_PATH, SVG_OUTPUT_PATH)
+                image_to_svg_high_detail(IMAGE_OUTPUT_PATH, SVG_OUTPUT_PATH)
+                instructions = svg_to_move_list(SVG_OUTPUT_PATH)
                 #instructions = get_image_instructions(IMAGE_OUTPUT_PATH)
                 if instructions == None:
                     print("Couldn't generate instruction list from image!")
                     return
 
-                draw_cycle(instructions)
+                #draw_cycle(instructions)
             break  
 
     image_camera_button = Button(window, borderwidth=0, text="Draw from camera (AI)", command=image_camera_clicked)
