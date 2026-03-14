@@ -112,7 +112,7 @@ if __name__ == "__main__":
                     print("Couldn't generate instruction list from image!")
                     return
 
-                draw_cycle(instructions)
+                #draw_cycle(instructions)
             break  
 
     image_camera_button = Button(window, borderwidth=0, text="Draw from camera (AI)", command=image_camera_clicked)
