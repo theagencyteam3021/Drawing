@@ -8,7 +8,7 @@
 from config import *
 from modules.URrobotRTDE import UniversalRobot
 from modules.text_vectorize import get_str_instructions
-from modules.image_vectorize import take_picture, image_to_minimal_svg, svg_to_move_list
+from modules.image_vectorize import take_picture, image_to_minimal_svg, svg_to_move_list, image_to_svg_high_detail, save_svg, execute_svg_on_robot
 from modules.transformations import fit_elements
 from modules.execute_move import execute_move_list
 from modules.paper_grabber import load_paper, return_paper
@@ -43,6 +43,11 @@ pipeline = create_pipeline()
 if __name__ == "__main__":
     def draw_cycle(move_list):
         fit_elements(move_list)
+        #write move list to file for debugging
+        with open("move_list.txt", "w") as f:
+            f.write(str(move_list)) 
+        
+        print("Starting Drawing Robot\n")
         ursula.movej(URSULA_GENERAL_HOME, URSULA_ACCEL, URSULA_VEL)
 
         #load_success = load_paper(robert)
@@ -53,9 +58,11 @@ if __name__ == "__main__":
         #    return
         
         ursula.movej(URSULA_PAPER_HOME, URSULA_ACCEL, URSULA_VEL)
+        print("Starting drawing cycle\n")
         execute_move_list(ursula, move_list, URSULA_ACCEL, URSULA_VEL, URSULA_UP_HEIGHT, URSULA_DOWN_HEIGHT)
         ursula.movej(URSULA_PAPER_HOME, URSULA_ACCEL, URSULA_VEL)
         ursula.movej(URSULA_GENERAL_HOME, URSULA_ACCEL, URSULA_VEL)
+        print("Drawing cycle complete\n")
 
         #return_success = return_paper(robert)
         #if return_success == True:
@@ -63,7 +70,7 @@ if __name__ == "__main__":
         #else:
         #    print("Something blew up while returning the paper, manual intervention may be needed")
         #    return
-
+    print("Robots connected\n")
     window = Tk()
     window.title("Robot Drawing")
     window.configure(bg="black")
@@ -89,14 +96,17 @@ if __name__ == "__main__":
             return
 
         while True:
-            generate_caricature(pipe=pipeline, source_image_path=IMAGE_OUTPUT_PATH, out_image_path=IMAGE_OUTPUT_PATH, caricaturize=False)
+            generate_caricature(pipe=pipeline, source_image_path=IMAGE_OUTPUT_PATH, out_image_path=IMAGE_OUTPUT_PATH, caricaturize=True)
 
             decision = choice_prompt(window, "Output Caricature", ("Accept", "Reroll", "Cancel"), IMAGE_OUTPUT_PATH)
             if decision == "Reroll":
                 continue
             elif decision == "Accept":
-                image_to_minimal_svg(IMAGE_OUTPUT_PATH, IMAGE_OUTPUT_PATH)
-                instructions = svg_to_move_list(IMAGE_OUTPUT_PATH)
+                image_to_minimal_svg(IMAGE_OUTPUT_PATH, SVG_OUTPUT_PATH)
+                #image_to_svg_high_detail(IMAGE_OUTPUT_PATH, SVG_OUTPUT_PATH)
+                save_svg(SVG_OUTPUT_PATH, "Output images/generated_drawing.svg")
+                print("Saved SVG to file")
+                instructions = svg_to_move_list(SVG_OUTPUT_PATH)
                 #instructions = get_image_instructions(IMAGE_OUTPUT_PATH)
                 if instructions == None:
                     print("Couldn't generate instruction list from image!")
